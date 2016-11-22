@@ -16,6 +16,7 @@ class ViewController: UIViewController, WKNavigationDelegate {
 
     var webView: WKWebView! // WKWebView is able's web renderer
     var progressView: UIProgressView!
+    var websites = ["apple.com", "hackingwithswift.com"]
     
     override func loadView() {
         // Create an instance of WKWebView and assign it to the webView property
@@ -71,17 +72,41 @@ class ViewController: UIViewController, WKNavigationDelegate {
     
     func openTapped() {
         let ac = UIAlertController(title: "Open page...", message: nil, preferredStyle: .actionSheet)
-        ac.addAction(UIAlertAction(title: "apple.com", style: .default, handler: openPage))
-        ac.addAction(UIAlertAction(title: "hackingwithswift.com", style: .default, handler: openPage))
+        
+        for website in websites {
+            ac.addAction(UIAlertAction(title: website, style: .default, handler: openPage))
+        }
+
         ac.addAction(UIAlertAction(title: "cancel", style: .cancel))
         present(ac, animated: true)
     }
     
     func openPage(action: UIAlertAction!) {
         // Use the title property of the action and append it to https to create the URL
-        let url = URL(string: "https://" + action.title!)!
+        let url = URL(string: "https://" + websites[0])!
         // Wrap the url in a url request and give it to the web view to load
         webView.load(URLRequest(url: url))
+    }
+    
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        // Create a constant url to be equal to the url of the navigation
+        let url = navigationAction.request.url
+        
+        // Use if let to unwrap the optional value or url!.host and assign that value to a constant
+        if let host = url!.host {
+            // Loop through the websites in our safe website list
+            for website in websites {
+                // Checks to see if the website exists somewhere in the host name. Call range of on one string and give it another string in the parameter and it will tell you if it was found or nil
+                if host.range(of: website) != nil {
+                    // If the website was found we let the decisionHandler handle it and exit the method
+                    decisionHandler(.allow)
+                    return
+                }
+            }
+        }
+        
+        // If the website can't be found, we tell the decision handler to cancel loading
+        decisionHandler(.cancel)
     }
     
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
