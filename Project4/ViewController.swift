@@ -34,6 +34,27 @@ class ViewController: UIViewController, WKNavigationDelegate {
         webView.load(URLRequest(url: url))
         // Allows users to swipe from edge to edge to move backwards/forwards while browsing
         webView.allowsBackForwardNavigationGestures = true
+        // Add a button to the navigation bar called "Open" and call openTapped method when tapped
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Open", style: .plain, target: self, action: #selector(openTapped))
+    }
+    
+    func openTapped() {
+        let ac = UIAlertController(title: "Open page...", message: nil, preferredStyle: .actionSheet)
+        ac.addAction(UIAlertAction(title: "apple.com", style: .default, handler: openPage))
+        ac.addAction(UIAlertAction(title: "hackingwithswift.com", style: .default, handler: openPage))
+        ac.addAction(UIAlertAction(title: "cancel", style: .cancel))
+        present(ac, animated: true)
+    }
+    
+    func openPage(action: UIAlertAction!) {
+        // Use the title property of the action and append it to https to create the URL
+        let url = URL(string: "https://" + action.title!)!
+        // Wrap the url in a url request and give it to the web view to load
+        webView.load(URLRequest(url: url))
+    }
+    
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        title = webView.title
     }
 
     override func didReceiveMemoryWarning() {
