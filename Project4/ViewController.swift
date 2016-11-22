@@ -15,6 +15,7 @@ import UIKit
 class ViewController: UIViewController, WKNavigationDelegate {
 
     var webView: WKWebView! // WKWebView is able's web renderer
+    var progressView: UIProgressView!
     
     override func loadView() {
         // Create an instance of WKWebView and assign it to the webView property
@@ -36,6 +37,36 @@ class ViewController: UIViewController, WKNavigationDelegate {
         webView.allowsBackForwardNavigationGestures = true
         // Add a button to the navigation bar called "Open" and call openTapped method when tapped
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Open", style: .plain, target: self, action: #selector(openTapped))
+        
+        // Create a UIProgressView instance and give it the default style
+        progressView = UIProgressView(progressViewStyle: .default)
+        // Set the layout size so it fits the contents fully
+        progressView.sizeToFit()
+        // Wrap the UIProgressView inside the new instance of UIBarButtonItem so it can go in our toolbar. This is our progress button that we'll put on the left side of the toolbar
+        let progressButton = UIBarButtonItem(customView: progressView)
+        
+        // Helps put the refresh button on the right by taking up as much room as it can on the left
+        let spacer = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        // The refresh button to be used that calls the reload method in our web view
+        let refresh = UIBarButtonItem(barButtonSystemItem: .refresh, target: webView, action: #selector(webView.reload))
+        
+        // Create an array containing the flexible space and refresh buttons, and then set it to be our view controller's toolbarItems array
+        toolbarItems = [progressButton, spacer, refresh]
+        
+        // Keep the toolbar visible
+        navigationController?.isToolbarHidden = false
+        
+        // This is called a Key-Value obeserving (KVO) and we'll be using it to keep track of the progress button. To do KVO, we'll first need to add ourselves as an observer. This method takes in 4 parameters: 1. who the observer is - us 2. what property we want to observe - the estimatedProgress property of WKWebView 3. which values we want and 4. a context value is a unique value that you want to be sent back to you when it changes
+        // #keyPath works like #selector because it allows the compiler to check if your code is correct
+        // In some cases, removeObserver should be called when you're finished observing
+        webView.addObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: .new, context: nil)
+    }
+    
+    // Method to tell you when an observer value has changed
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == "estimatedProgress" {
+            progressView.progress = Float(webView.estimatedProgress)
+        }
     }
     
     func openTapped() {
